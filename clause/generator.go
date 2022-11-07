@@ -11,6 +11,12 @@ var generators map[Type]generator
 
 func init() {
 	generators = make(map[Type]generator)
+	generators[INSERT] = _insert
+	generators[VALUES] = _values
+	generators[SELECT] = _select
+	generators[LIMIT] = _limit
+	generators[WHERE] = _where
+	generators[ORDERBY] = _orderBy
 }
 
 func genBindVars(num int) string {
@@ -46,4 +52,28 @@ func _values(values ...interface{}) (string, []interface{}) {
 		vars = append(vars, v...)
 	}
 	return sql.String(), vars
+}
+
+func _select(values ...interface{}) (string, []interface{}) {
+	//select $fields from $tableName
+	tableName := values[0].(string)
+	fields := strings.Join(values[1].([]string), ",")
+	sql := fmt.Sprintf("SELECT %s FROM %s", tableName, fields)
+	return sql, []interface{}{}
+}
+
+func _limit(values ...interface{}) (string, []interface{}) {
+	//limit %num
+	return "LIMIT ?", values
+}
+
+func _where(values ...interface{}) (string, []interface{}) {
+	//WHERE $desc
+	desc, vars := values[0], values[1:]
+	return fmt.Sprintf("WHERE %s", desc), vars
+}
+
+func _orderBy(values ...interface{}) (string, []interface{}) {
+	//ORDER BY %v1
+	return fmt.Sprintf("ORDER BY %s", values[0]), []interface{}{}
 }
